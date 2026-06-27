@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>С днём рождения!</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg:        #0d0d14;
+      --surface:   #13131f;
+      --gold:      #c9a84c;
+      --gold-soft: #e8c97a;
+      --white:     #f5f0e8;
+      --muted:     #7a7895;
+      --accent:    #6f54ad;
+
+      --ff-display: 'Playfair Display', Georgia, serif;
+      --ff-body:    'Inter', system-ui, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--white);
+      font-family: var(--ff-body);
+      font-weight: 300;
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+    #confetti-canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 999;
+    }
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem 1.5rem;
+      position: relative;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 50%;  left: 50%;
+      transform: translate(-50%, -60%);
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(139,92,246,.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-eyebrow {
+      font-family: var(--ff-body);
+      font-size: .75rem;
+      font-weight: 500;
+      letter-spacing: .25em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1.5rem;
+      opacity: 0;
+      animation: fadeUp .8s .2s forwards;
+    }
+
+    .hero-title {
+      font-family: var(--ff-display);
+      font-size: clamp(3rem, 10vw, 7rem);
+      font-weight: 900;
+      line-height: 1.05;
+      color: var(--white);
+      opacity: 0;
+      animation: fadeUp .9s .4s forwards;
+    }
+
+    /* Золотое слово */
+    .hero-title .highlight {
+      color: var(--gold-soft);
+      display: block;
+    }
+
+    .hero-subtitle {
+      margin-top: 1.5rem;
+      font-size: clamp(1rem, 2.5vw, 1.25rem);
+      color: var(--muted);
+      max-width: 40ch;
+      opacity: 0;
+      animation: fadeUp .9s .6s forwards;
+    }
+
+    .hero-cta {
+      margin-top: 3rem;
+      opacity: 0;
+      animation: fadeUp .9s .9s forwards;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: .85rem 2.4rem;
+      border: 1.5px solid var(--gold);
+      color: var(--gold-soft);
+      font-family: var(--ff-body);
+      font-size: .9rem;
+      font-weight: 500;
+      letter-spacing: .08em;
+      text-decoration: none;
+      border-radius: 999px;
+      cursor: pointer;
+      background: transparent;
+      transition: background .25s, color .25s;
+    }
+    .btn:hover {
+      background: var(--gold);
+      color: var(--bg);
+    }
+    .divider {
+      width: 60px; height: 1px;
+      background: var(--gold);
+      margin: 0 auto;
+      opacity: .4;
+    }
+
+    .section {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 6rem 1.5rem;
+    }
+
+    .section-label {
+      font-size: .7rem;
+      letter-spacing: .3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 2rem;
+    }
+
+    .section-text {
+      font-size: clamp(1rem, 2vw, 1.15rem);
+      color: #c5bfdb;
+      line-height: 1.9;
+    }
+
+    /* Цитата / врезка */
+    .quote {
+      border-left: 3px solid var(--gold);
+      padding: 1.25rem 1.75rem;
+      margin: -6.5rem 0;
+      color: var(--white);
+      font-family: var(--ff-display);
+      font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+      font-style: italic;
+    }
+
+    .wishes {
+      background: var(--surface);
+      padding: 6rem 1.5rem;
+    }
+
+    .wishes-inner {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .wishes-title {
+      font-family: var(--ff-display);
+      font-size: clamp(1.8rem, 5vw, 3rem);
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .card {
+      background: var(--bg);
+      border: 1px solid rgba(201,168,76,.15);
+      border-radius: 16px;
+      padding: 2rem 1.75rem;
+      transition: border-color .3s, transform .3s;
+    }
+    .card:active {
+      border-color: rgba(201,168,76,.5);
+      animation: move 0.5s ease forwards;
+      box-shadow: inset ;
+    }
+    .card:hover {
+      border-color: rgba(201,168,76,.5);
+      animation: move 0.5s ease forwards;
+    }
+    .card:not(:hover){
+        animation: remove 0.5s ease forwards;
+    }
+    .card-title {
+      font-family: var(--ff-display);
+      font-size: 2.1rem;
+      font-weight: 700;
+      color: var(--gold-soft);
+      margin-bottom: .5rem;
+    }
+
+    .card-text {
+      font-size: .9rem;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+    .finale {
+      text-align: center;
+      padding: 7rem 1.5rem 5rem;
+    }
+
+    .finale-title {
+      font-family: var(--ff-display);
+      font-size: clamp(2.5rem, 8vw, 5.5rem);
+      font-weight: 900;
+      color: var(--gold-soft);
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+    }
+
+    .finale-sig {
+      font-size: .95rem;
+      color: var(--muted);
+      letter-spacing: .05em;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes move{
+        from{
+            transform: translateX(0);
+            transform: translateY(0);
+            box-shadow: 8px 8px 10px rgba(0, 0, 0, 0.3);
+        }
+        to{
+            transform: translateX(10px);
+            transform: translateY(-10px);
+            box-shadow: 8px 16px 20px rgba(230, 226, 0, 0.3);
+        }
+    }
+        @keyframes remove{
+        from{
+            transform: translateX(10px);
+            transform: translateY(-10px);
+            box-shadow: 8px 16px 20px rgba(230, 226, 0, 0.3);
+        }
+        to{
+            transform: translateX(0);
+            transform: translateY(0);
+            box-shadow: 8px 8px 10px rgba(0, 0, 0, 0.3);
+        }
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(32px);
+      transition: opacity .7s ease, transform .7s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: none;
+    }
+    @media (max-width: 600px) {
+      .cards { grid-template-columns: 1fr; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+
+  </style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+
+<section class="hero">
+  <p class="hero-eyebrow">- От Эскендера -</p>
+
+  <h1 class="hero-title">
+    С днём
+    <span class="highlight">рождения!</span>
+  </h1>
+
+  <p class="hero-subtitle">
+
+  </p>
+
+  <div class="hero-cta">
+    <a href="#message" class="btn">Читать дальше ↓</a>
+  </div>
+</section>
+
+
+<section id="message" class="section">
+
+  <div class="section-text reveal">
+
+    <div class="quote">
+        Надеюсь хорошо проводишь день рожденья, и будешь хорошо проводить время после него 
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+
+
+<section class="wishes">
+  <div class="wishes-inner">
+    <h2 class="wishes-title reveal">Желаю тебе…</h2>
+
+    <div class="cards">
+
+      <div class="card reveal">
+        <div class="card-title">Здоровья</div>
+        <p class="card-text">
+          Крепкого здоровья и иммунитета
+        </p>
+      </div>
+      <div class="card reveal">
+        <div class="card-title">Успеха</div>
+        <p class="card-text">
+          Пусть каждая цель, которую ты ставишь, с легкостью преодолевается
+        </p>
+      </div>
+      <div class="card reveal">
+        <div class="card-title">Радости</div>
+        <p class="card-text">
+          Больше поводов смеяться от души
+        </p>
+      </div>
+
+      <div class="card reveal">
+        <div class="card-title">Верных людей</div>
+        <p class="card-text">
+          Пусть рядом всегда будут те, кто понастоящему ценит тебя
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<section class="finale">
+  <p class="finale-title reveal">Счастливого дня рождения!🎉</p>
+</section>
+
+
+
+<script>
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.15 });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx    = canvas.getContext('2d');
+  let W, H, particles = [];
+
+  const COLORS = ['#c9a84c','#e8c97a','#8b5cf6','#f472b6','#34d399','#f5f0e8'];
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function makeParticle() {
+    return {
+      x:  Math.random() * W,
+      y: -20,
+      r:  Math.random() * 5 + 3,
+      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      speed: Math.random() * 2.5 + 1,
+      drift: (Math.random() - .5) * 1.5,
+      spin:  (Math.random() - .5) * .15,
+      angle: 0,
+      shape: Math.random() > .5 ? 'rect' : 'circle',
+    };
+  }
+
+  let burstDone = false;
+  function burst() {
+    for (let i = 0; i < 140; i++) {
+      const p = makeParticle();
+      p.y = Math.random() * H * .3; 
+      particles.push(p);
+    }
+  }
+  window.addEventListener('load', burst);
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach(p => {
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.angle);
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = .85;
+      if (p.shape === 'circle') {
+        ctx.beginPath();
+        ctx.arc(0, 0, p.r, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.fillRect(-p.r, -p.r * .5, p.r * 2, p.r);
+      }
+      ctx.restore();
+
+      p.y     += p.speed;
+      p.x     += p.drift;
+      p.angle += p.spin;
+    });
+
+
+    particles = particles.filter(p => p.y < H + 20);
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+</script>
+
+</body>
+</html>
